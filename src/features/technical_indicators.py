@@ -1,7 +1,3 @@
-"""
-Calculate technical indicators
-"""
-
 import pandas as pd
 import ta
 import logging
@@ -12,12 +8,17 @@ logger = logging.getLogger(__name__)
 def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
     """Calculate all technical indicators"""
     
-    if df.empty or len(df) < 200:
-        logger.warning("Not enough data for indicators")
+    if df.empty:
+        logger.warning("Empty dataframe")
         return df
     
     df = df.copy()
     df = df.sort_values('timestamp')
+    
+    # Check minimum data
+    if len(df) < 200:
+        logger.warning(f"Not enough data: {len(df)} rows (need 200+)")
+        return df
     
     try:
         # RSI
@@ -45,10 +46,14 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
             df['high'], df['low'], df['close'], window=14
         ).average_true_range()
         
-        # Drop NaN
-        df = df.dropna()
+        # JANGAN drop NaN - biarkan NULL untuk rows yang belum cukup data
+        # Yang penting adalah rows terakhir (latest) sudah punya indicators
         
-        logger.info(f"Calculated indicators for {len(df)} rows")
+        # Count rows yang punya indicators lengkap
+        indicator_cols = ['rsi_14', 'macd', 'ema_20', 'ema_50', 'ema_200', 'atr_14']
+        valid_rows = df[indicator_cols].notna().all(axis=1).sum()
+        
+        logger.info(f"Calculated indicators: {valid_rows}/{len(df)} rows have complete data")
         
         return df
     
