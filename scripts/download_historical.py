@@ -36,7 +36,7 @@ def main():
         logger.info(f"{'='*70}")
         
         downloader = DukascopyH1Downloader(symbol)
-        df = downloader.download_range(start_date, end_date, delay_seconds=0.3)
+        df = downloader.download_range(start_date, end_date)
         
         if not df.empty:
             uploaded = supabase.upload_ohlc(df, symbol, 'H1')
