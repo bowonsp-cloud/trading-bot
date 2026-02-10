@@ -1,8 +1,17 @@
-supabase==2.3.0
+# Core
+python-dotenv==1.0.0
+
+# Data
 pandas==2.1.4
 numpy==1.26.2
 requests==2.31.0
-python-dotenv==1.0.0
+
+# Database - FIX: downgrade supabase untuk kompatibilitas
+supabase==2.0.3
+gotrue==2.0.0
+
+# Technical Analysis
 ta==0.11.0
+
+# Machine Learning
 scikit-learn==1.3.2
-tensorflow==2.15.0
