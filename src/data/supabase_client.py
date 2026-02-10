@@ -33,7 +33,12 @@ class SupabaseClient:
             ).order("timestamp", desc=True).limit(1).execute()
             
             if response.data:
-                return pd.to_datetime(response.data[0]['timestamp'])
+                # FIX: Convert to timezone-naive datetime
+                ts = pd.to_datetime(response.data[0]['timestamp'])
+                # Remove timezone info to make it naive
+                if ts.tz is not None:
+                    ts = ts.tz_localize(None)
+                return ts
             return None
         except Exception as e:
             logger.error(f"Error: {e}")
@@ -46,6 +51,11 @@ class SupabaseClient:
         df = df.copy()
         df['symbol'] = symbol
         df['timeframe'] = timeframe
+        
+        # FIX: Make sure timestamp is timezone-naive before converting to string
+        if hasattr(df['timestamp'].dtype, 'tz') and df['timestamp'].dtype.tz is not None:
+            df['timestamp'] = df['timestamp'].dt.tz_localize(None)
+        
         df['timestamp'] = pd.to_datetime(df['timestamp']).dt.strftime('%Y-%m-%d %H:%M:%S')
         
         records = df.to_dict('records')
