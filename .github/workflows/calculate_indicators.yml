@@ -1,0 +1,31 @@
+name: Calculate Indicators
+
+on:
+  # Run setelah data sync selesai
+  workflow_run:
+    workflows: ["Sync Data"]
+    types:
+      - completed
+  
+  # Manual trigger
+  workflow_dispatch:
+
+jobs:
+  calculate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install
+        run: pip install -r requirements.txt
+      
+      - name: Calculate Indicators
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/calculate_indicators.py
