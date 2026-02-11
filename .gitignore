@@ -3,6 +3,4 @@ __pycache__/
 .env
 *.log
 data/
-models/saved/*.h5
-models/saved/*.pkl
 .DS_Store
