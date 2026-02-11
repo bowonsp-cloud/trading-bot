@@ -25,14 +25,16 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/train_model.py
       
-      - name: Upload Models
-        uses: actions/upload-artifact@v4
-        with:
-          name: trained-models
-          path: models/saved/*.h5
+      - name: Commit trained models
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add models/saved/*.h5
+          git add models/saved/*.pkl
+          git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Auto-update: trained models $(date +'%Y-%m-%d %H:%M')"
       
-      - name: Upload Scalers
-        uses: actions/upload-artifact@v4
+      - name: Push changes
+        uses: ad-m/github-push-action@master
         with:
-          name: model-scalers
-          path: models/saved/*.pkl
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
