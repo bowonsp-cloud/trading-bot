@@ -26,13 +26,13 @@ jobs:
         run: python scripts/train_model.py
       
       - name: Upload Models
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trained-models
           path: models/saved/*.h5
       
       - name: Upload Scalers
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: model-scalers
           path: models/saved/*.pkl
