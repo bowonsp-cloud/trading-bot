@@ -1,0 +1,38 @@
+name: Train Model
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # Setiap minggu, Minggu jam 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install
+        run: pip install -r requirements.txt
+      
+      - name: Train Models
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/train_model.py
+      
+      - name: Upload Models
+        uses: actions/upload-artifact@v3
+        with:
+          name: trained-models
+          path: models/saved/*.h5
+      
+      - name: Upload Scalers
+        uses: actions/upload-artifact@v3
+        with:
+          name: model-scalers
+          path: models/saved/*.pkl
