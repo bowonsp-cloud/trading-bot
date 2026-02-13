@@ -117,8 +117,6 @@ def main():
     
    # Generate predictions untuk semua symbols di config
     for symbol in config.SYMBOLS:
-    
-    for symbol in active_symbols:
         try:
             prediction = generate_for_symbol(symbol, supabase)
             results[symbol] = prediction
