@@ -115,8 +115,8 @@ def main():
     # Generate predictions
     results = {}
     
-    # Hanya untuk EURUSD & GBPUSD (skip XAUUSD karena accuracy rendah)
-    active_symbols = ['EURUSD', 'GBPUSD']
+   # Generate predictions untuk semua symbols di config
+    for symbol in config.SYMBOLS:
     
     for symbol in active_symbols:
         try:
