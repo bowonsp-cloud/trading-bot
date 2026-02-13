@@ -22,6 +22,10 @@ def main():
     logger.info("="*70)
     
     config.validate()
+    # DEBUG: Print untuk verify symbols
+    logger.info(f"DEBUG: Symbols from config = {config.SYMBOLS}")
+    logger.info(f"DEBUG: Total symbols = {len(config.SYMBOLS)}")
+    
     supabase = SupabaseClient()
     
     # Download 30 hari terakhir
