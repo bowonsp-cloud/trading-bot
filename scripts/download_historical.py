@@ -30,7 +30,7 @@ def main():
     
     logger.info(f"Downloading from {start_date} to {end_date}")
     
-    for symbol in ['EURUSD', 'GBPUSD', 'XAUUSD']:
+    for symbol in config.SYMBOLS:
         logger.info(f"\n{'='*70}")
         logger.info(f"Downloading {symbol}")
         logger.info(f"{'='*70}")
