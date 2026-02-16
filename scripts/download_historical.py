@@ -21,11 +21,18 @@ def main():
     logger.info("HISTORICAL DATA DOWNLOAD")
     logger.info("="*70)
     
-    config.validate()
-    # DEBUG: Print untuk verify symbols
-    logger.info(f"DEBUG: Symbols from config = {config.SYMBOLS}")
-    logger.info(f"DEBUG: Total symbols = {len(config.SYMBOLS)}")
+    # HARDCODED: Download semua 11 pairs
+    symbols_to_download = [
+        'EURUSD', 'GBPUSD', 'XAUUSD', 
+        'USDJPY', 'AUDUSD', 'USDCHF', 
+        'USDCAD', 'NZDUSD', 'EURGBP', 
+        'EURJPY', 'GBPJPY'
+    ]
     
+    logger.info(f"Total symbols to download: {len(symbols_to_download)}")
+    logger.info(f"Symbols: {', '.join(symbols_to_download)}")
+    
+    config.validate()
     supabase = SupabaseClient()
     
     # Download 30 hari terakhir
@@ -33,20 +40,30 @@ def main():
     start_date = end_date - timedelta(days=30)
     
     logger.info(f"Downloading from {start_date} to {end_date}")
+    logger.info("="*70)
     
-    for symbol in config.SYMBOLS:
+    for symbol in symbols_to_download:
         logger.info(f"\n{'='*70}")
         logger.info(f"Downloading {symbol}")
         logger.info(f"{'='*70}")
         
-        downloader = DukascopyH1Downloader(symbol)
-        df = downloader.download_range(start_date, end_date)
+        try:
+            downloader = DukascopyH1Downloader(symbol)
+            df = downloader.download_range(start_date, end_date)
+            
+            if not df.empty:
+                uploaded = supabase.upload_ohlc(df, symbol, 'H1')
+                logger.info(f"✅ {symbol}: {uploaded} candles uploaded")
+            else:
+                logger.warning(f"⚠️  {symbol}: No data downloaded")
         
-        if not df.empty:
-            uploaded = supabase.upload_ohlc(df, symbol, 'H1')
-            logger.info(f"✅ {symbol}: {uploaded} candles uploaded")
+        except Exception as e:
+            logger.error(f"❌ {symbol}: Error - {e}")
+            continue
     
-    logger.info("\n✅ Historical download complete!")
+    logger.info("\n" + "="*70)
+    logger.info("✅ Historical download complete!")
+    logger.info("="*70)
 
 
 if __name__ == "__main__":
