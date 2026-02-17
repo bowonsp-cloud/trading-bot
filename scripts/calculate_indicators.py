@@ -84,17 +84,28 @@ def main():
     logger.info("CALCULATE TECHNICAL INDICATORS")
     logger.info("="*70)
     
+    # Hardcoded semua 11 pairs
+    ALL_SYMBOLS = [
+        'EURUSD', 'GBPUSD', 'XAUUSD',
+        'USDJPY', 'AUDUSD', 'USDCHF',
+        'USDCAD', 'NZDUSD', 'EURGBP',
+        'EURJPY', 'GBPJPY'
+    ]
+    
+    logger.info(f"Symbols: {', '.join(ALL_SYMBOLS)}")
+    logger.info(f"Total: {len(ALL_SYMBOLS)} pairs")
+    logger.info("="*70)
+    
     config.validate()
     supabase = SupabaseClient()
     
-    for symbol in config.SYMBOLS:
+    for symbol in ALL_SYMBOLS:
         try:
             update_indicators_for_symbol(symbol.strip(), supabase)
         except Exception as e:
             logger.error(f"Error processing {symbol}: {e}")
     
     logger.info("\n✅ Indicators calculation complete!")
-
 
 if __name__ == "__main__":
     main()
