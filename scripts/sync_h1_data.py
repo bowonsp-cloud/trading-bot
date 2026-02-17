@@ -7,7 +7,8 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import logging
-from datetime import datetime
+import pandas as pd
+from datetime import datetime, timedelta
 
 from src.data.dukascopy_downloader import DukascopyH1Downloader
 from src.data.supabase_client import SupabaseClient
@@ -15,6 +16,14 @@ from src.utils.config import config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# HARDCODED symbols untuk memastikan semua pairs ter-sync
+ALL_SYMBOLS = [
+    'EURUSD', 'GBPUSD', 'XAUUSD',
+    'USDJPY', 'AUDUSD', 'USDCHF',
+    'USDCAD', 'NZDUSD', 'EURGBP',
+    'EURJPY', 'GBPJPY'
+]
 
 
 def sync_symbol(symbol: str, supabase: SupabaseClient) -> int:
@@ -65,8 +74,8 @@ def main():
     logger.info("="*70)
     logger.info("SYNC H1 DATA")
     logger.info("="*70)
-    logger.info(f"Symbols: {', '.join(config.SYMBOLS)}")
-    logger.info(f"Total: {len(config.SYMBOLS)} pairs")
+    logger.info(f"Symbols: {', '.join(ALL_SYMBOLS)}")
+    logger.info(f"Total: {len(ALL_SYMBOLS)} pairs")
     logger.info("="*70)
     
     config.validate()
@@ -74,7 +83,7 @@ def main():
     
     results = {}
     
-    for symbol in config.SYMBOLS:
+    for symbol in ALL_SYMBOLS:
         logger.info(f"\nSyncing {symbol}")
         try:
             uploaded = sync_symbol(symbol, supabase)
@@ -97,6 +106,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import pandas as pd
-    from datetime import timedelta
     main()
