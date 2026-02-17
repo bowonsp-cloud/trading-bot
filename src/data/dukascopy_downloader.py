@@ -49,11 +49,16 @@ class DukascopyH1Downloader:
         return url
     
     def _decompress_bi5(self, data: bytes) -> Optional[bytes]:
+        """Decompress LZMA compressed bi5 data"""
         try:
-            return lzma.decompress(data)
+        return lzma.decompress(data)
+        except lzma.LZMAError as e:
+        # File corrupt dari Dukascopy - skip
+        logger.warning(f"Corrupt data (skip): {e}")
+        return None
         except Exception as e:
-            logger.error(f"Decompression error: {e}")
-            return None
+        logger.error(f"Decompression error: {e}")
+        return None
     
     def _parse_ticks_to_ohlc(self, data: bytes, hour_start: datetime) -> Optional[dict]:
         if not data or len(data) == 0:
