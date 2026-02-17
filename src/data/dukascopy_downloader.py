@@ -25,7 +25,13 @@ class DukascopyH1Downloader:
         'USDJPY': 'USDJPY',
         'AUDUSD': 'AUDUSD',
         'USDCHF': 'USDCHF',
+        'USDCAD': 'USDCAD',
+        'NZDUSD': 'NZDUSD',
+        'EURGBP': 'EURGBP',
+        'EURJPY': 'EURJPY',
+        'GBPJPY': 'GBPJPY',
         'XAUUSD': 'XAUUSD',
+        'XAGUSD': 'XAGUSD',
     }
     
     def __init__(self, symbol: str):
@@ -37,6 +43,7 @@ class DukascopyH1Downloader:
         self.price_divisor = 1000 if 'JPY' in symbol else 100000
     
     def _get_bi5_url(self, dt: datetime) -> str:
+        """Generate URL untuk download bi5 file"""
         year = dt.year
         month = dt.month - 1
         day = dt.day
@@ -49,18 +56,18 @@ class DukascopyH1Downloader:
         return url
     
     def _decompress_bi5(self, data: bytes) -> Optional[bytes]:
-    """Decompress LZMA compressed bi5 data"""
-    try:
-        return lzma.decompress(data)  # ← 4 spaces indent
-    except lzma.LZMAError as e:
-        # File corrupt dari Dukascopy - skip
-        logger.warning(f"Corrupt data (skip): {e}")
-        return None
-    except Exception as e:
-        logger.error(f"Decompression error: {e}")
-        return None
+        """Decompress LZMA compressed bi5 data"""
+        try:
+            return lzma.decompress(data)
+        except lzma.LZMAError as e:
+            logger.warning(f"Corrupt data (skip): {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Decompression error: {e}")
+            return None
     
     def _parse_ticks_to_ohlc(self, data: bytes, hour_start: datetime) -> Optional[dict]:
+        """Parse tick data dan aggregate ke OHLC H1"""
         if not data or len(data) == 0:
             return None
         
@@ -103,37 +110,59 @@ class DukascopyH1Downloader:
         return ohlc
     
     def download_hour(self, dt: datetime) -> Optional[dict]:
+        """Download dan parse data untuk 1 jam"""
         hour_start = dt.replace(minute=0, second=0, microsecond=0)
         url = self._get_bi5_url(hour_start)
         
         try:
-            logger.info(f"Downloading: {self.symbol} {hour_start}")
             response = requests.get(url, timeout=30)
             
             if response.status_code == 200:
                 decompressed = self._decompress_bi5(response.content)
+                
                 if decompressed:
-                    return self._parse_ticks_to_ohlc(decompressed, hour_start)
+                    ohlc = self._parse_ticks_to_ohlc(decompressed, hour_start)
+                    if ohlc:
+                        return ohlc
+            
+            elif response.status_code == 404:
+                # No data available for this hour
+                return None
             
             return None
         
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.error(f"Error downloading {hour_start}: {e}")
             return None
     
-    def download_range(self, start_date: datetime, end_date: datetime) -> pd.DataFrame:
+    def download_range(
+        self, 
+        start_date: datetime, 
+        end_date: datetime
+    ) -> pd.DataFrame:
+        """Download range of hours"""
         data_list = []
+        
         current = start_date.replace(minute=0, second=0, microsecond=0)
         end = end_date.replace(minute=0, second=0, microsecond=0)
         
+        total_hours = int((end - current).total_seconds() / 3600) + 1
+        downloaded = 0
+        
+        logger.info(f"Downloading {total_hours} hours for {self.symbol}")
+        
         while current <= end:
             ohlc = self.download_hour(current)
+            
             if ohlc:
                 ohlc['symbol'] = self.symbol
                 data_list.append(ohlc)
+                downloaded += 1
             
             current += timedelta(hours=1)
             time.sleep(0.5)
+        
+        logger.info(f"Downloaded {downloaded}/{total_hours} hours for {self.symbol}")
         
         if data_list:
             df = pd.DataFrame(data_list)
@@ -142,3 +171,11 @@ class DukascopyH1Downloader:
             return df
         
         return pd.DataFrame()
+    
+    def download_latest(self, hours: int = 24) -> pd.DataFrame:
+        """Download N jam terakhir"""
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(hours=hours)
+        
+        logger.info(f"Downloading latest {hours} hours for {self.symbol}")
+        return self.download_range(start_date, end_date)
