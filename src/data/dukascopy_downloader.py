@@ -49,14 +49,14 @@ class DukascopyH1Downloader:
         return url
     
     def _decompress_bi5(self, data: bytes) -> Optional[bytes]:
-        """Decompress LZMA compressed bi5 data"""
-        try:
-        return lzma.decompress(data)
-        except lzma.LZMAError as e:
+    """Decompress LZMA compressed bi5 data"""
+    try:
+        return lzma.decompress(data)  # ← 4 spaces indent
+    except lzma.LZMAError as e:
         # File corrupt dari Dukascopy - skip
         logger.warning(f"Corrupt data (skip): {e}")
         return None
-        except Exception as e:
+    except Exception as e:
         logger.error(f"Decompression error: {e}")
         return None
     
